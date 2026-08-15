@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EGY Noon Minutes Fulfillment - Hierarchy Org Chart</title>
+  <title>EGY Noon Minutes Fulfillment - Dynamic Org Chart</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -148,6 +148,7 @@
   </div>
 
   <script>
+    // ضع رابط الـ Web App الجديد هنا
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzGUp85QYiwxhtiP4IzrUL_FM0JKJ8-NILwA33Jw9fhNmDgcdrPagZpALlN21aLThwv/exec';
 
     function loadData() {
@@ -157,7 +158,7 @@
           document.getElementById('loading').style.display = 'none';
           document.getElementById('viewport').style.display = 'block';
           
-          const rows = data.slice(1); // Skip header row
+          const rows = data.slice(1);
           buildHierarchy(rows);
           
           const now = new Date();
@@ -172,8 +173,8 @@
       const nodesMap = {};
       const roots = [];
 
-      // 1. Process rows based on the NEW Sheet Schema (Image 3)
       rows.forEach(row => {
+        // الأعمدة حسب جدول الأشخاص بالضبط (العمود A: Number, B: Title, C: Name, D: Email, E: Mobile Phone, F: Stores, G: Direct Manager)
         const title = row[1] ? String(row[1]).trim() : '';
         const name = row[2] ? String(row[2]).trim() : '';
         const email = row[3] && row[3] !== 'N/A' ? String(row[3]).trim() : '';
@@ -183,10 +184,7 @@
 
         if (!name) return;
 
-        // Clean phone number
         phone = phone.replace(/^"\+?/, '').replace(/"$/, '').trim();
-
-        // Format stores array
         const stores = storesRaw ? storesRaw.split(/[,-\s]+/).filter(Boolean) : [];
 
         nodesMap[name] = {
@@ -200,7 +198,6 @@
         };
       });
 
-      // 2. Build parent-child hierarchy
       for (let name in nodesMap) {
         const node = nodesMap[name];
         if (node.manager && nodesMap[node.manager]) {
@@ -210,7 +207,6 @@
         }
       }
 
-      // 3. Render Tree HTML
       let html = '<ul>';
       roots.forEach(rootNode => {
         html += renderNode(rootNode);
@@ -266,10 +262,7 @@
       return html;
     }
 
-    // Initial Load
     loadData();
-
-    // Auto Refresh Every 30 Seconds
     setInterval(loadData, 30000);
   </script>
 </body>
