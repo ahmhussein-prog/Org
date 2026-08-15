@@ -4,276 +4,369 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EGY Noon Minutes Logistics - Org Chart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
       --noon-yellow: #feee00;
-      --bg-pattern: #f0f3f8;
-      --card-border: #d0d7de;
-      --text-dark: #1f2937;
-      --text-muted: #6b7280;
+      --bg-dots: #f3f4f6;
+      --border-color: #e5e7eb;
+      --text-main: #111827;
+      --text-sub: #6b7280;
       
       /* Role Colors */
-      --color-director: #eab308;
-      --color-manager: #2563eb;
-      --color-assistant: #0284c7;
-      --color-supervisor: #7c3aed;
-      --color-tl: #16a34a;
+      --color-leadership: #eab308;
+      --color-manager: #1d4ed8;
+      --color-supervisor: #7e22ce;
+      --color-team-leader: #15803d;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    
+
     body {
-      background-color: var(--bg-pattern);
-      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-      background-size: 16px 16px;
-      color: var(--text-dark);
-      padding-bottom: 50px;
+      background-color: var(--bg-dots);
+      background-image: radial-gradient(#d1d5db 1.2px, transparent 1.2px);
+      background-size: 20px 20px;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Header Bar */
+    /* Top Navigation Header */
     header {
-      background: white;
-      border-bottom: 1px solid var(--card-border);
-      padding: 12px 24px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
       gap: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
     }
 
-    .logo {
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .brand-logo {
       background: var(--noon-yellow);
-      font-weight: 900;
       padding: 6px 12px;
       border-radius: 6px;
-      font-size: 16px;
-      letter-spacing: -0.5px;
+      font-weight: 900;
+      font-size: 15px;
+      line-height: 1;
+    }
+    .brand-logo span { block-size: auto; display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
+
+    .org-title span { font-size: 10px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.5px; text-transform: uppercase; }
+    .org-title h1 { font-size: 15px; font-weight: 700; color: var(--text-main); }
+
+    .nav-tabs { display: flex; gap: 4px; background: #f3f4f6; padding: 3px; border-radius: 8px; }
+    .tab-btn {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-sub);
+    }
+    .tab-btn.active { background: #1e1b4b; color: white; }
+
+    .stats-bar { display: flex; gap: 8px; font-size: 12px; }
+    .stat-badge { background: #f3f4f6; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+    .stat-badge span { font-weight: 700; }
+
+    .controls-right { display: flex; align-items: center; gap: 10px; }
+    .search-box {
+      position: relative;
+      background: #f3f4f6;
+      border-radius: 20px;
+      padding: 6px 12px 6px 32px;
+      display: flex;
+      align-items: center;
+    }
+    .search-box i { position: absolute; left: 12px; color: var(--text-sub); font-size: 12px; }
+    .search-box input { border: none; background: transparent; outline: none; font-size: 12px; width: 140px; }
+
+    .action-btn {
+      background: white;
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .title-area h1 { font-size: 16px; font-weight: 700; }
-    .title-area span { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-
-    /* Org Tree Structure */
-    .tree-container {
-      overflow-x: auto;
+    /* Org Chart Tree Layout */
+    .tree-viewport {
+      flex: 1;
+      overflow: auto;
       padding: 40px 20px;
       display: flex;
       justify-content: center;
     }
 
-    .tree ul {
-      padding-top: 20px;
-      position: relative;
+    .tree, .tree ul {
+      padding-top: 20px; position: relative;
       transition: all 0.5s;
       display: flex;
       justify-content: center;
     }
 
     .tree li {
-      float: left;
-      text-align: center;
+      float: left; text-align: center;
       list-style-type: none;
       position: relative;
-      padding: 20px 10px 0 10px;
+      padding: 20px 12px 0 12px;
     }
 
-    /* Connecting Lines */
+    /* Tree Connectors */
     .tree li::before, .tree li::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 50%;
-      border-top: 2px solid #cbd5e1;
-      width: 50%;
-      height: 20px;
+      content: ''; position: absolute; top: 0; right: 50%;
+      border-top: 2px solid #cbd5e1; width: 50%; height: 20px;
     }
-
-    .tree li::after {
-      right: auto;
-      left: 50%;
-      border-left: 2px solid #cbd5e1;
-    }
-
+    .tree li::after { right: auto; left: 50%; border-left: 2px solid #cbd5e1; }
     .tree li:only-child::after, .tree li:only-child::before { display: none; }
     .tree li:only-child { padding-top: 0; }
     .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-    .tree li:last-child::before { border-right: 2px solid #cbd5e1; border-radius: 0 5px 0 0; }
-    .tree li:first-child::after { border-radius: 5px 0 0 0; }
-
+    .tree li:last-child::before { border-right: 2px solid #cbd5e1; border-radius: 0 6px 0 0; }
+    .tree li:first-child::after { border-radius: 6px 0 0 0; }
     .tree ul ul::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      border-left: 2px solid #cbd5e1;
-      width: 0;
-      height: 20px;
+      content: ''; position: absolute; top: 0; left: 50%;
+      border-left: 2px solid #cbd5e1; width: 0; height: 20px;
     }
 
-    /* Card Styling */
-    .card {
-      background: white;
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      width: 250px;
+    /* Employee Card Component */
+    .node-card {
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 16px;
+      width: 240px;
       padding: 16px;
-      display: inline-block;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      position: relative;
+      display: inline-block;
       text-align: left;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+    .node-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
 
-    .card.top-level {
+    .node-card.leadership-card {
       background: #fefce8;
-      border-color: #fde047;
+      border: 2px solid #fde047;
     }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+    .role-badge {
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .badge::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-
-    /* Dynamic Colors by Role */
-    .role-director { color: var(--color-director); }
-    .role-director::before { background: var(--color-director); }
-    
-    .role-manager { color: var(--color-manager); }
-    .role-manager::before { background: var(--color-manager); }
-    
-    .role-assistant { color: var(--color-assistant); }
-    .role-assistant::before { background: var(--color-assistant); }
-    
-    .role-supervisor { color: var(--color-supervisor); }
-    .role-supervisor::before { background: var(--color-supervisor); }
-    
-    .role-tl { color: var(--color-tl); }
-    .role-tl::before { background: var(--color-tl); }
-
-    .name { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
-    .title { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
-
-    .field-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 11px;
-      margin-bottom: 6px;
-      word-break: break-all;
       display: flex;
       align-items: center;
       gap: 6px;
+      margin-bottom: 12px;
     }
+    .role-badge::before { content: '•'; font-size: 16px; line-height: 0; }
+    
+    .role-leadership { color: var(--color-leadership); }
+    .role-manager { color: var(--color-manager); }
+    .role-supervisor { color: var(--color-supervisor); }
+    .role-team-leader { color: var(--color-team-leader); }
 
-    .stores-tag {
-      background: #e0e7ff;
-      color: #3730a3;
-      border-radius: 4px;
-      padding: 4px 8px;
+    .profile-section { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .avatar-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color); }
+    .user-info .user-name { font-size: 13px; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+    .user-info .user-title { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+
+    .stores-pill {
+      background: #eff6ff;
+      color: #1e40af;
       font-size: 10px;
       font-weight: 600;
-      margin-bottom: 8px;
-      display: block;
-      line-height: 1.4;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      line-height: 1.3;
     }
+
+    .contact-field {
+      background: #f9fafb;
+      border: 1px solid #f3f4f6;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: #374151;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .contact-field i { color: #9ca3af; font-size: 11px; width: 12px; }
+    .contact-field.whatsapp-btn {
+      color: #16a34a;
+      font-weight: 600;
+    }
+    .contact-field.whatsapp-btn i { color: #16a34a; }
+
+    /* Bottom Floating Legend (Colour Key) */
+    .colour-key {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      font-size: 11px;
+      z-index: 90;
+    }
+    .colour-key h4 { font-size: 10px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px; text-transform: uppercase; }
+    .key-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 600; color: #374151; }
+    .key-dot { width: 10px; height: 10px; border-radius: 3px; }
   </style>
 </head>
 <body>
 
+  <!-- Top Header Navigation -->
   <header>
-    <div class="brand">
-      <div class="logo">noon minutes</div>
-      <div class="title-area">
-        <span>Org Chart</span>
+    <div class="header-left">
+      <div class="brand-logo">noon <span>MINUTES</span></div>
+      <div class="org-title">
+        <span>ORG CHART</span>
         <h1>EGY Noon Minutes Logistics</h1>
       </div>
+      <div class="nav-tabs">
+        <button class="tab-btn active"><i class="fa-solid fa-sitemap"></i> Org Chart</button>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-badge"><span>12</span> roles</div>
+        <div class="stat-badge"><span>12</span> filled</div>
+      </div>
+    </div>
+
+    <div class="controls-right">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Find person or title...">
+      </div>
+      <button class="action-btn">Expand all</button>
+      <button class="action-btn">Collapse all</button>
     </div>
   </header>
 
-  <div class="tree-container">
+  <!-- Org Chart Area -->
+  <div class="tree-viewport">
     <div class="tree">
       <ul>
-        <!-- Associate Director -->
+        <!-- 1. Associate Director -->
         <li>
-          <div class="card top-level">
-            <div class="badge role-director">Associate Director</div>
-            <div class="name">Kareem Hesham Abdelbary</div>
-            <div class="title">Associate Director</div>
-            <div class="field-box">✉️ khesham@noon.com</div>
-            <div class="field-box">📞 +20 10 16777692</div>
+          <div class="node-card leadership-card">
+            <div class="role-badge role-leadership">AVP / Leadership</div>
+            <div class="profile-section">
+              <img class="avatar-img" src="https://ui-avatars.com/api/?name=Kareem+Hesham&background=fde047&color=000" alt="Kareem">
+              <div class="user-info">
+                <div class="user-name">Kareem Hesham</div>
+                <div class="user-title">Associate Director</div>
+              </div>
+            </div>
+            <a href="mailto:khesham@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> khesham@noon.com</a>
+            <a href="tel:+201016777692" class="contact-field"><i class="fa-solid fa-phone"></i> +20 10 16777692</a>
+            <a href="https://wa.me/201016777692" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
           </div>
-          
+
           <ul>
-            <!-- Fulfillment Manager -->
+            <!-- 2. Fulfillment Manager -->
             <li>
-              <div class="card">
-                <div class="badge role-manager">Manager</div>
-                <div class="name">Maged Meselhy</div>
-                <div class="title">Fulfillment Manager</div>
-                <div class="field-box">✉️ mmeselhy@noon.com</div>
-                <div class="field-box">📞 +20 11 11671168</div>
+              <div class="node-card">
+                <div class="role-badge role-manager">Manager</div>
+                <div class="profile-section">
+                  <img class="avatar-img" src="https://ui-avatars.com/api/?name=Maged+Meselhy&background=2563eb&color=fff" alt="Maged">
+                  <div class="user-info">
+                    <div class="user-name">Maged Meselhy</div>
+                    <div class="user-title">Fulfillment Manager</div>
+                  </div>
+                </div>
+                <a href="mailto:mmeselhy@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> mmeselhy@noon.com</a>
+                <a href="tel:+201111671168" class="contact-field"><i class="fa-solid fa-phone"></i> +20 11 11671168</a>
+                <a href="https://wa.me/201111671168" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
               </div>
 
               <ul>
-                <!-- Assistant Manager -->
+                <!-- 3. Assistant Manager -->
                 <li>
-                  <div class="card">
-                    <div class="badge role-assistant">Assistant Manager</div>
-                    <div class="name">Ahmed Hatem</div>
-                    <div class="title">Assistant Manager</div>
-                    <div class="field-box">✉️ ahhatem@noon.com</div>
-                    <div class="field-box">📞 N/A</div>
+                  <div class="node-card">
+                    <div class="role-badge role-manager">Assistant Manager</div>
+                    <div class="profile-section">
+                      <img class="avatar-img" src="https://ui-avatars.com/api/?name=Ahmed+Hatem&background=0284c7&color=fff" alt="Ahmed">
+                      <div class="user-info">
+                        <div class="user-name">Ahmed Hatem</div>
+                        <div class="user-title">Assistant Manager</div>
+                      </div>
+                    </div>
+                    <a href="mailto:ahhatem@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> ahhatem@noon.com</a>
+                    <div class="contact-field"><i class="fa-solid fa-phone"></i> N/A</div>
                   </div>
 
                   <ul>
                     <!-- SUPERVISORS LEVEL -->
-                    
+
                     <!-- Supervisor 1 -->
                     <li>
-                      <div class="card">
-                        <div class="badge role-supervisor">Supervisor</div>
-                        <div class="name">Ahmed Ayman</div>
-                        <div class="title">Supervisor</div>
-                        <div class="stores-tag">CAIDS10, CAIDS11, CAIDS19</div>
-                        <div class="field-box">✉️ ahmhussein@noon.com</div>
-                        <div class="field-box">📞 +20 10 17586077</div>
+                      <div class="node-card">
+                        <div class="role-badge role-supervisor">Supervisor</div>
+                        <div class="profile-section">
+                          <img class="avatar-img" src="https://ui-avatars.com/api/?name=Ahmed+Ayman&background=7e22ce&color=fff" alt="Ahmed">
+                          <div class="user-info">
+                            <div class="user-name">Ahmed Ayman</div>
+                            <div class="user-title">Logistics Supervisor</div>
+                          </div>
+                        </div>
+                        <div class="stores-pill">Stores: CAIDS10, CAIDS11, CAIDS19</div>
+                        <a href="mailto:ahmhussein@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> ahmhussein@noon.com</a>
+                        <a href="tel:+201017586077" class="contact-field"><i class="fa-solid fa-phone"></i> +20 10 17586077</a>
+                        <a href="https://wa.me/201017586077" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                       </div>
+
                       <ul>
-                        <!-- Team Leaders under Ahmed Ayman -->
+                        <!-- TL 1 -->
                         <li>
-                          <div class="card">
-                            <div class="badge role-tl">Team Leader</div>
-                            <div class="name">Mahmoud Abdelazem</div>
-                            <div class="title">CAIDS10</div>
-                            <div class="field-box">✉️ mdelnaggar@noon.com</div>
-                            <div class="field-box">📞 +20 10 10260089</div>
+                          <div class="node-card">
+                            <div class="role-badge role-team-leader">Team Leader</div>
+                            <div class="profile-section">
+                              <img class="avatar-img" src="https://ui-avatars.com/api/?name=Mahmoud+Abdelazem&background=15803d&color=fff" alt="Mahmoud">
+                              <div class="user-info">
+                                <div class="user-name">Mahmoud Abdelazem</div>
+                                <div class="user-title">Team Leader - CAIDS10</div>
+                              </div>
+                            </div>
+                            <a href="mailto:mdelnaggar@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> mdelnaggar@noon.com</a>
+                            <a href="tel:+201010260089" class="contact-field"><i class="fa-solid fa-phone"></i> +20 10 10260089</a>
+                            <a href="https://wa.me/201010260089" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                           </div>
                         </li>
+                        <!-- TL 2 -->
                         <li>
-                          <div class="card">
-                            <div class="badge role-tl">Team Leader</div>
-                            <div class="name">Tamer Hanafy</div>
-                            <div class="title">CAIDS11</div>
-                            <div class="field-box">✉️ thanafy@noon.com</div>
-                            <div class="field-box">📞 +20 10 04544027</div>
+                          <div class="node-card">
+                            <div class="role-badge role-team-leader">Team Leader</div>
+                            <div class="profile-section">
+                              <img class="avatar-img" src="https://ui-avatars.com/api/?name=Tamer+Hanafy&background=15803d&color=fff" alt="Tamer">
+                              <div class="user-info">
+                                <div class="user-name">Tamer Hanafy</div>
+                                <div class="user-title">Team Leader - CAIDS11</div>
+                              </div>
+                            </div>
+                            <a href="mailto:thanafy@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> thanafy@noon.com</a>
+                            <a href="tel:+201004544027" class="contact-field"><i class="fa-solid fa-phone"></i> +20 10 04544027</a>
+                            <a href="https://wa.me/201004544027" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                           </div>
                         </li>
                       </ul>
@@ -281,23 +374,36 @@
 
                     <!-- Supervisor 2 -->
                     <li>
-                      <div class="card">
-                        <div class="badge role-supervisor">Supervisor</div>
-                        <div class="name">Mina Samy</div>
-                        <div class="title">Supervisor</div>
-                        <div class="stores-tag">CAIDS12, 14, 15, 17, 25, ALYDS02, 03</div>
-                        <div class="field-box">✉️ mnashed@noon.com</div>
-                        <div class="field-box">📞 +20 10 11928844</div>
+                      <div class="node-card">
+                        <div class="role-badge role-supervisor">Supervisor</div>
+                        <div class="profile-section">
+                          <img class="avatar-img" src="https://ui-avatars.com/api/?name=Mina+Samy&background=7e22ce&color=fff" alt="Mina">
+                          <div class="user-info">
+                            <div class="user-name">Mina Samy</div>
+                            <div class="user-title">Logistics Supervisor</div>
+                          </div>
+                        </div>
+                        <div class="stores-pill">Stores: CAIDS12, 14, 15, 17, 25, ALYDS02, 03</div>
+                        <a href="mailto:mnashed@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> mnashed@noon.com</a>
+                        <a href="tel:+201011928844" class="contact-field"><i class="fa-solid fa-phone"></i> +20 10 11928844</a>
+                        <a href="https://wa.me/201011928844" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                       </div>
+
                       <ul>
-                        <!-- Team Leader under Mina Samy -->
+                        <!-- TL 3 -->
                         <li>
-                          <div class="card">
-                            <div class="badge role-tl">Team Leader</div>
-                            <div class="name">Magdy Elkomy</div>
-                            <div class="title">CAIDS12</div>
-                            <div class="field-box">✉️ melkomy@noon.com</div>
-                            <div class="field-box">📞 +20 11 54529283</div>
+                          <div class="node-card">
+                            <div class="role-badge role-team-leader">Team Leader</div>
+                            <div class="profile-section">
+                              <img class="avatar-img" src="https://ui-avatars.com/api/?name=Magdy+Elkomy&background=15803d&color=fff" alt="Magdy">
+                              <div class="user-info">
+                                <div class="user-name">Magdy Elkomy</div>
+                                <div class="user-title">Team Leader - CAIDS12</div>
+                              </div>
+                            </div>
+                            <a href="mailto:melkomy@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> melkomy@noon.com</a>
+                            <a href="tel:+201154529283" class="contact-field"><i class="fa-solid fa-phone"></i> +20 11 54529283</a>
+                            <a href="https://wa.me/201154529283" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                           </div>
                         </li>
                       </ul>
@@ -305,23 +411,36 @@
 
                     <!-- Supervisor 3 -->
                     <li>
-                      <div class="card">
-                        <div class="badge role-supervisor">Supervisor</div>
-                        <div class="name">Ahmed Mostafa</div>
-                        <div class="title">Supervisor</div>
-                        <div class="stores-tag">CAIDS09, CAIDS23</div>
-                        <div class="field-box">✉️ ahmoustafa@noon.com</div>
-                        <div class="field-box">📞 +20 12 13332098</div>
+                      <div class="node-card">
+                        <div class="role-badge role-supervisor">Supervisor</div>
+                        <div class="profile-section">
+                          <img class="avatar-img" src="https://ui-avatars.com/api/?name=Ahmed+Mostafa&background=7e22ce&color=fff" alt="Ahmed">
+                          <div class="user-info">
+                            <div class="user-name">Ahmed Mostafa</div>
+                            <div class="user-title">Logistics Supervisor</div>
+                          </div>
+                        </div>
+                        <div class="stores-pill">Stores: CAIDS09, CAIDS23</div>
+                        <a href="mailto:ahmoustafa@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> ahmoustafa@noon.com</a>
+                        <a href="tel:+201213332098" class="contact-field"><i class="fa-solid fa-phone"></i> +20 12 13332098</a>
+                        <a href="https://wa.me/201213332098" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                       </div>
+
                       <ul>
-                        <!-- Team Leader under Ahmed Mostafa -->
+                        <!-- TL 4 -->
                         <li>
-                          <div class="card">
-                            <div class="badge role-tl">Team Leader</div>
-                            <div class="name">Tarek Sabry</div>
-                            <div class="title">CAIDS09</div>
-                            <div class="field-box">✉️ tsabry@noon.com</div>
-                            <div class="field-box">📞 +20 10 42449897</div>
+                          <div class="node-card">
+                            <div class="role-badge role-team-leader">Team Leader</div>
+                            <div class="profile-section">
+                              <img class="avatar-img" src="https://ui-avatars.com/api/?name=Tarek+Sabry&background=15803d&color=fff" alt="Tarek">
+                              <div class="user-info">
+                                <div class="user-name">Tarek Sabry</div>
+                                <div class="user-title">Team Leader - CAIDS09</div>
+                              </div>
+                            </div>
+                            <a href="mailto:tsabry@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> tsabry@noon.com</a>
+                            <a href="tel:+201042449897" class="contact-field"><i class="fa-solid fa-phone"></i> +20 10 42449897</a>
+                            <a href="https://wa.me/201042449897" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                           </div>
                         </li>
                       </ul>
@@ -329,25 +448,37 @@
 
                     <!-- Supervisor 4 -->
                     <li>
-                      <div class="card">
-                        <div class="badge role-supervisor">Supervisor</div>
-                        <div class="name">Hisham Heikal</div>
-                        <div class="title">Supervisor</div>
-                        <div class="stores-tag">CAIDS13, CAIDS22, CAIDS24</div>
-                        <div class="field-box">✉️ hheikal@noon.com</div>
-                        <div class="field-box">📞 +20 11 15649560</div>
+                      <div class="node-card">
+                        <div class="role-badge role-supervisor">Supervisor</div>
+                        <div class="profile-section">
+                          <img class="avatar-img" src="https://ui-avatars.com/api/?name=Hisham+Heikal&background=7e22ce&color=fff" alt="Hisham">
+                          <div class="user-info">
+                            <div class="user-name">Hisham Heikal</div>
+                            <div class="user-title">Logistics Supervisor</div>
+                          </div>
+                        </div>
+                        <div class="stores-pill">Stores: CAIDS13, CAIDS22, CAIDS24</div>
+                        <a href="mailto:hheikal@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> hheikal@noon.com</a>
+                        <a href="tel:+201115649560" class="contact-field"><i class="fa-solid fa-phone"></i> +20 11 15649560</a>
+                        <a href="https://wa.me/201115649560" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                       </div>
                     </li>
 
                     <!-- Supervisor 5 -->
                     <li>
-                      <div class="card">
-                        <div class="badge role-supervisor">Supervisor</div>
-                        <div class="name">Ahmed Saied</div>
-                        <div class="title">Supervisor</div>
-                        <div class="stores-tag">CAIDS16, CAIDS18, CAIDS20, CAIDS21</div>
-                        <div class="field-box">✉️ asaieed@noon.com</div>
-                        <div class="field-box">📞 +20 10 08712481</div>
+                      <div class="node-card">
+                        <div class="role-badge role-supervisor">Supervisor</div>
+                        <div class="profile-section">
+                          <img class="avatar-img" src="https://ui-avatars.com/api/?name=Ahmed+Saied&background=7e22ce&color=fff" alt="Ahmed">
+                          <div class="user-info">
+                            <div class="user-name">Ahmed Saied</div>
+                            <div class="user-title">Logistics Supervisor</div>
+                          </div>
+                        </div>
+                        <div class="stores-pill">Stores: CAIDS16, CAIDS18, CAIDS20, CAIDS21</div>
+                        <a href="mailto:asaieed@noon.com" class="contact-field"><i class="fa-regular fa-envelope"></i> asaieed@noon.com</a>
+                        <a href="tel:+201008712481" class="contact-field"><i class="fa-solid fa-phone"></i> +20 10 08712481</a>
+                        <a href="https://wa.me/201008712481" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                       </div>
                     </li>
 
@@ -359,6 +490,15 @@
         </li>
       </ul>
     </div>
+  </div>
+
+  <!-- Legend Box (Colour Key) -->
+  <div class="colour-key">
+    <h4>COLOUR KEY</h4>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-leadership)"></div> AVP / Leadership</div>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-manager)"></div> Manager</div>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-supervisor)"></div> Supervisor</div>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-team-leader)"></div> Team Leader</div>
   </div>
 
 </body>
