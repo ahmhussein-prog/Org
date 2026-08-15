@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EGY Noon Minutes Fulfillment - Org Chart Dynamic</title>
+  <title>EGY Noon Minutes Fulfillment - Dynamic Org Chart</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- PapaParse library for reading CSV -->
+  <!-- PapaParse for reading live Google Sheets CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     :root {
@@ -45,9 +45,9 @@
     .org-title span { font-size: 10px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
     .org-title h1 { font-size: 16px; font-weight: 800; }
 
-    .loading-spinner {
+    .loading-state {
       display: flex; align-items: center; justify-content: center;
-      height: 80vh; font-size: 18px; font-weight: 700; color: var(--text-sub); gap: 10px;
+      height: 70vh; font-weight: 700; color: var(--text-sub); gap: 10px;
     }
 
     .tree-viewport {
@@ -57,7 +57,7 @@
 
     .tree-container { display: inline-block; min-width: max-content; margin: 0 auto; }
 
-    /* Org Chart CSS */
+    /* Org Chart Structure */
     .tree, .tree ul {
       padding-top: 20px; position: relative; display: flex; justify-content: center;
     }
@@ -99,7 +99,7 @@
 
     .profile-section { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
     .avatar-img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color); }
-    .user-info .user-name { font-size: 12px; font-weight: 700; color: var(--text-main); }
+    .user-info .user-name { font-size: 12px; font-weight: 700; color: var(--text-main); line-height: 1.2; }
     .user-info .user-title { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
 
     .stores-pill {
@@ -138,11 +138,11 @@
     </div>
   </header>
 
-  <div id="loading" class="loading-spinner">
-    <i class="fa-solid fa-spinner fa-spin"></i> Loading Data from Google Sheet...
+  <div id="loading" class="loading-state">
+    <i class="fa-solid fa-spinner fa-spin"></i> Fetching live data from Google Sheets...
   </div>
 
-  <div class="tree-viewport" id="viewport" style="display:none;">
+  <div class="tree-viewport" id="viewport" style="display: none;">
     <div class="tree-container">
       <div class="tree" id="treeRoot"></div>
     </div>
@@ -163,32 +163,34 @@
       header: true,
       skipEmptyLines: true,
       complete: function(results) {
-        buildOrgTree(results.data);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('viewport').style.display = 'block';
+        renderOrgTree(results.data);
+      },
+      error: function(err) {
+        document.getElementById('loading').innerHTML = '<span style="color: red;">Failed to load data. Please check access permissions.</span>';
       }
     });
 
-    function buildOrgTree(rows) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('viewport').style.display = 'block';
-
-      // Grouping data by Manager -> Supervisor -> Team Leader
+    function renderOrgTree(rows) {
       const treeData = {};
 
       rows.forEach(row => {
         const mgr = row['Fulfillment manager']?.trim() || 'Unassigned Manager';
         const sup = row['Supervisor/Ass. Sup']?.trim() || 'Unassigned Supervisor';
+        const supEmail = row['SP\'s Email ID']?.trim() || '';
         const tlName = row['Team Leader Name']?.trim();
         const dsCode = row['DS CODE']?.trim();
         const tlEmail = row['TL Email ID']?.trim();
         const contact = row['Contact Number']?.trim();
 
         if (!treeData[mgr]) treeData[mgr] = {};
-        if (!treeData[mgr][sup]) treeData[mgr][sup] = [];
+        if (!treeData[mgr][sup]) treeData[mgr][sup] = { email: supEmail, tls: [] };
 
         if (tlName) {
-          treeData[mgr][sup].push({
+          treeData[mgr][sup].tls.push({
             name: tlName,
-            dsCode: dsCode,
+            code: dsCode,
             email: tlEmail,
             phone: contact
           });
@@ -211,8 +213,7 @@
           <ul>`;
 
         for (let sup in treeData[mgr]) {
-          const supEmail = rows.find(r => r['Supervisor/Ass. Sup']?.trim() === sup)?.['SP\'s Email ID']?.trim() || '';
-          
+          const supObj = treeData[mgr][sup];
           html += `<li>
             <div class="node-card">
               <div class="role-badge role-supervisor">Supervisor</div>
@@ -223,11 +224,11 @@
                   <div class="user-title">Supervisor</div>
                 </div>
               </div>
-              ${supEmail ? `<a href="mailto:${supEmail}" class="contact-field"><i class="fa-regular fa-envelope"></i> ${supEmail}</a>` : ''}
+              ${supObj.email ? `<a href="mailto:${supObj.email}" class="contact-field"><i class="fa-regular fa-envelope"></i> ${supObj.email}</a>` : ''}
             </div>
             <ul>`;
 
-          treeData[mgr][sup].forEach(tl => {
+          supObj.tls.forEach(tl => {
             const cleanPhone = tl.phone ? tl.phone.replace(/[^0-9]/g, '') : '';
             html += `<li>
               <div class="node-card">
@@ -239,7 +240,7 @@
                     <div class="user-title">Team Leader</div>
                   </div>
                 </div>
-                ${tl.dsCode ? `<div class="stores-pill">${tl.dsCode}</div>` : ''}
+                ${tl.code ? `<div class="stores-pill">${tl.code}</div>` : ''}
                 ${tl.email ? `<a href="mailto:${tl.email}" class="contact-field"><i class="fa-regular fa-envelope"></i> ${tl.email}</a>` : ''}
                 ${tl.phone ? `<a href="tel:+${cleanPhone}" class="contact-field"><i class="fa-solid fa-phone"></i> +${tl.phone}</a>` : ''}
                 ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}
@@ -256,7 +257,7 @@
 
       document.getElementById('treeRoot').innerHTML = html;
 
-      // Auto center scroll
+      // Auto-scroll to center
       const viewport = document.getElementById('viewport');
       viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2;
     }
