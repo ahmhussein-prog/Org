@@ -22,20 +22,20 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-    body {
+    html, body {
+      height: 100%;
       background-color: var(--bg-dots);
       background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
       background-size: 24px 24px;
       color: var(--text-main);
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      user-select: none;
     }
 
-    /* Header */
+    /* Header Sticky */
     header {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
       background: #ffffff;
       border-bottom: 1px solid var(--border-color);
       padding: 12px 24px;
@@ -43,8 +43,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 15px;
-      position: relative;
-      z-index: 100;
+      z-index: 1000;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
@@ -66,23 +65,17 @@
     .stat-badge { background: #f1f5f9; padding: 4px 12px; border-radius: 20px; font-weight: 600; color: #475569; }
     .stat-badge span { font-weight: 700; color: var(--text-main); }
 
-    /* Interactive Viewport (Drag & Scroll) */
+    /* Scrollable Canvas Area */
     .tree-viewport {
-      flex: 1;
       width: 100%;
-      height: 100%;
-      cursor: grab;
-      overflow: hidden;
-      position: relative;
+      overflow: auto; /* يظهر شريط التمرير الطبيعي (Horizontal Scrollbar) */
+      padding: 40px 60px 100px 60px;
     }
-    .tree-viewport:active { cursor: grabbing; }
 
     .tree-container {
-      position: absolute;
-      transform-origin: 0 0;
-      padding: 60px;
       display: inline-block;
       min-width: max-content;
+      margin: 0 auto;
     }
 
     /* Org Chart Tree Layout */
@@ -173,7 +166,7 @@
       word-break: break-word;
     }
 
-    /* Contact Links & WhatsApp Hover */
+    /* Contact Links & WhatsApp Hover Effect */
     .contact-field {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
@@ -204,7 +197,7 @@
     }
     .contact-field.whatsapp-btn i { color: #16a34a; }
 
-    /* Dark Hover Effect for WhatsApp Button */
+    /* Darker Hover for WhatsApp */
     .contact-field.whatsapp-btn:hover {
       background: #15803d;
       color: #ffffff;
@@ -214,49 +207,18 @@
       color: #ffffff;
     }
 
-    /* Floating Controls */
-    .controls-panel {
+    /* Floating Legend */
+    .colour-key {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 90;
-    }
-
-    .zoom-controls {
-      background: white;
-      padding: 4px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .zoom-btn {
-      width: 32px;
-      height: 32px;
-      border: none;
-      background: transparent;
-      border-radius: 6px;
-      cursor: pointer;
-      color: #475569;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .zoom-btn:hover { background: #f1f5f9; color: var(--text-main); }
-
-    .colour-key {
       background: white;
       padding: 12px 16px;
       border-radius: 10px;
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       font-size: 11px;
+      z-index: 90;
     }
     .colour-key h4 { font-size: 10px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px; text-transform: uppercase; }
     .key-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 600; color: #334155; }
@@ -265,7 +227,7 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Top Sticky Header -->
   <header>
     <div class="header-left">
       <div class="brand-logo">noon <span>MINUTES</span></div>
@@ -280,9 +242,9 @@
     </div>
   </header>
 
-  <!-- Viewport -->
-  <div class="tree-viewport" id="viewport">
-    <div class="tree-container" id="treeContainer">
+  <!-- Scrollable Canvas -->
+  <div class="tree-viewport">
+    <div class="tree-container">
       <div class="tree">
         <ul>
           <!-- Associate Director -->
@@ -669,106 +631,20 @@
     </div>
   </div>
 
-  <!-- Controls Panel -->
-  <div class="controls-panel">
-    <div class="zoom-controls">
-      <button class="zoom-btn" id="zoomIn" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
-      <button class="zoom-btn" id="zoomOut" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
-      <button class="zoom-btn" id="zoomReset" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
-    </div>
-
-    <div class="colour-key">
-      <h4>COLOUR KEY</h4>
-      <div class="key-item"><div class="key-dot" style="background: var(--color-leadership)"></div> Associate Director</div>
-      <div class="key-item"><div class="key-dot" style="background: var(--color-manager)"></div> Manager</div>
-      <div class="key-item"><div class="key-dot" style="background: var(--color-supervisor)"></div> Supervisor / Sr.Supervisor</div>
-      <div class="key-item"><div class="key-dot" style="background: var(--color-team-leader)"></div> Team Leader</div>
-    </div>
+  <!-- Legend -->
+  <div class="colour-key">
+    <h4>COLOUR KEY</h4>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-leadership)"></div> Associate Director</div>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-manager)"></div> Manager</div>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-supervisor)"></div> Supervisor / Sr.Supervisor</div>
+    <div class="key-item"><div class="key-dot" style="background: var(--color-team-leader)"></div> Team Leader</div>
   </div>
 
-  <!-- Pan & Scroll Script -->
   <script>
-    const viewport = document.getElementById('viewport');
-    const container = document.getElementById('treeContainer');
-    
-    let scale = 1; // الحجم الطبيعي 100%
-    let pointX = 0;
-    let pointY = 0;
-    let startX = 0;
-    let startY = 0;
-    let isDragging = false;
-
-    // Center layout initially
+    // Center scroll position horizontally on page load
     window.addEventListener('load', () => {
-      const viewportWidth = viewport.offsetWidth;
-      const containerWidth = container.offsetWidth;
-      pointX = (viewportWidth - containerWidth) / 2;
-      pointY = 40;
-      updateTransform();
-    });
-
-    function updateTransform() {
-      container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
-    }
-
-    // Drag with Mouse
-    viewport.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.node-card, a, button')) return;
-      isDragging = true;
-      startX = e.clientX - pointX;
-      startY = e.clientY - pointY;
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      e.preventDefault();
-      pointX = e.clientX - startX;
-      pointY = e.clientY - startY;
-      updateTransform();
-    });
-
-    window.addEventListener('mouseup', () => {
-      isDragging = false;
-    });
-
-    // Scroll Naturally with Mouse Wheel
-    viewport.addEventListener('wheel', (e) => {
-      if (e.ctrlKey) {
-        // Zoom on Ctrl + Wheel
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.05 : -0.05;
-        scale = Math.min(Math.max(scale + delta, 0.4), 1.5);
-        updateTransform();
-      } else {
-        // Scroll vertically/horizontally without resizing
-        e.preventDefault();
-        if (e.shiftKey) {
-          pointX -= e.deltaY;
-        } else {
-          pointY -= e.deltaY;
-        }
-        updateTransform();
-      }
-    }, { passive: false });
-
-    // Floating Zoom Controls
-    document.getElementById('zoomIn').addEventListener('click', () => {
-      scale = Math.min(scale + 0.1, 1.5);
-      updateTransform();
-    });
-
-    document.getElementById('zoomOut').addEventListener('click', () => {
-      scale = Math.max(scale - 0.1, 0.4);
-      updateTransform();
-    });
-
-    document.getElementById('zoomReset').addEventListener('click', () => {
-      scale = 1;
-      const viewportWidth = viewport.offsetWidth;
-      const containerWidth = container.offsetWidth;
-      pointX = (viewportWidth - containerWidth) / 2;
-      pointY = 40;
-      updateTransform();
+      const viewport = document.querySelector('.tree-viewport');
+      viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2;
     });
   </script>
 
