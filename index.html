@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EGY Noon Minutes Fulfillment - Org Chart</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     :root {
       --noon-yellow: #feee00;
@@ -115,7 +114,7 @@
   </header>
 
   <div id="loading" class="loading-state">
-    <i class="fa-solid fa-spinner fa-spin"></i> Fetching live data from Google Sheets...
+    <i class="fa-solid fa-spinner fa-spin"></i> Fetching live data...
   </div>
 
   <div class="tree-viewport" id="viewport" style="display: none;">
@@ -132,37 +131,33 @@
   </div>
 
   <script>
-    // Original Google Sheet CSV URL
-    const rawUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ZB6rJEmK4_VX1BPy64kPvgnCeKM9RmpEbWGH0d4-oGeri0VRcl8zRxUCBoKEljDpsrcs7fIwk045/pub?gid=0&single=true&output=csv';
-    
-    // Using CORS Proxy to bypass browser security restrictions
-    const CSV_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzGUp85QYiwxhtiP4IzrUL_FM0JKJ8-NILwA33Jw9fhNmDgcdrPagZpALlN21aLThwv/exec';
 
-    Papa.parse(CSV_URL, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: function(results) {
+    fetch(WEB_APP_URL)
+      .then(response => response.json())
+      .then(data => {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('viewport').style.display = 'block';
-        renderOrgTree(results.data);
-      },
-      error: function(err) {
-        document.getElementById('loading').innerHTML = '<span style="color: red;">Failed to load data. Ensure sheet is set to "Anyone with link".</span>';
-      }
-    });
+        
+        // Skip Header Row
+        const rows = data.slice(1);
+        renderOrgTree(rows);
+      })
+      .catch(err => {
+        document.getElementById('loading').innerHTML = '<span style="color: red;">Failed to load data. Ensure App Access is set to "Anyone".</span>';
+      });
 
     function renderOrgTree(rows) {
       const treeData = {};
 
       rows.forEach(row => {
-        const mgr = row['Fulfillment manager']?.trim() || 'Unassigned Manager';
-        const sup = row['Supervisor/Ass. Sup']?.trim() || 'Unassigned Supervisor';
-        const supEmail = row['SP\'s Email ID']?.trim() || '';
-        const tlName = row['Team Leader Name']?.trim();
-        const dsCode = row['DS CODE']?.trim();
-        const tlEmail = row['TL Email ID']?.trim();
-        const contact = row['Contact Number']?.trim();
+        const code = row[2] || '';
+        const mgr = row[7]?.trim() || 'Unassigned Manager';
+        const sup = row[9]?.trim() || 'Unassigned Supervisor';
+        const supEmail = row[10]?.trim() || '';
+        const tlName = row[11]?.trim();
+        const phone = row[12] ? String(row[12]) : '';
+        const tlEmail = row[13]?.trim() || '';
 
         if (!treeData[mgr]) treeData[mgr] = {};
         if (!treeData[mgr][sup]) treeData[mgr][sup] = { email: supEmail, tls: [] };
@@ -170,9 +165,9 @@
         if (tlName) {
           treeData[mgr][sup].tls.push({
             name: tlName,
-            code: dsCode,
+            code: code,
             email: tlEmail,
-            phone: contact
+            phone: phone
           });
         }
       });
@@ -237,7 +232,6 @@
 
       document.getElementById('treeRoot').innerHTML = html;
 
-      // Auto scroll center
       const viewport = document.getElementById('viewport');
       viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2;
     }
