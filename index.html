@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EGY Noon Minutes Fulfillment - Dynamic Org Chart</title>
+  <title>EGY Noon Minutes Fulfillment - Org Chart</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- PapaParse for reading live Google Sheets CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     :root {
@@ -50,43 +49,23 @@
       height: 70vh; font-weight: 700; color: var(--text-sub); gap: 10px;
     }
 
-    .tree-viewport {
-      width: 100%; overflow: auto;
-      padding: 40px 60px 100px 60px;
-    }
-
+    .tree-viewport { width: 100%; overflow: auto; padding: 40px 60px 100px 60px; }
     .tree-container { display: inline-block; min-width: max-content; margin: 0 auto; }
 
-    /* Org Chart Structure */
-    .tree, .tree ul {
-      padding-top: 20px; position: relative; display: flex; justify-content: center;
-    }
-    .tree li {
-      float: left; text-align: center; list-style-type: none;
-      position: relative; padding: 20px 10px 0 10px;
-    }
-    .tree li::before, .tree li::after {
-      content: ''; position: absolute; top: 0; right: 50%;
-      border-top: 2px solid #94a3b8; width: 50%; height: 20px;
-    }
+    .tree, .tree ul { padding-top: 20px; position: relative; display: flex; justify-content: center; }
+    .tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 10px 0 10px; }
+    .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #94a3b8; width: 50%; height: 20px; }
     .tree li::after { right: auto; left: 50%; border-left: 2px solid #94a3b8; }
     .tree li:only-child::after, .tree li:only-child::before { display: none; }
     .tree li:only-child { padding-top: 0; }
     .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
     .tree li:last-child::before { border-right: 2px solid #94a3b8; border-radius: 0 6px 0 0; }
     .tree li:first-child::after { border-radius: 6px 0 0 0; }
-    .tree ul ul::before {
-      content: ''; position: absolute; top: 0; left: 50%;
-      border-left: 2px solid #94a3b8; width: 0; height: 20px;
-    }
+    .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #94a3b8; width: 0; height: 20px; }
 
     .node-card {
-      background: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      width: 240px;
-      padding: 14px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px;
+      width: 240px; padding: 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
       display: inline-block; text-align: left; transition: all 0.2s ease;
     }
     .node-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.08); }
@@ -102,10 +81,7 @@
     .user-info .user-name { font-size: 12px; font-weight: 700; color: var(--text-main); line-height: 1.2; }
     .user-info .user-title { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
 
-    .stores-pill {
-      background: #eff6ff; color: #1e40af; font-size: 10px; font-weight: 600;
-      padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; word-break: break-word;
-    }
+    .stores-pill { background: #eff6ff; color: #1e40af; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; word-break: break-word; }
 
     .contact-field {
       background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
@@ -156,7 +132,11 @@
   </div>
 
   <script>
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ZB6rJEmK4_VX1BPy64kPvgnCeKM9RmpEbWGH0d4-oGeri0VRcl8zRxUCBoKEljDpsrcs7fIwk045/pub?gid=0&single=true&output=csv';
+    // Original Google Sheet CSV URL
+    const rawUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ZB6rJEmK4_VX1BPy64kPvgnCeKM9RmpEbWGH0d4-oGeri0VRcl8zRxUCBoKEljDpsrcs7fIwk045/pub?gid=0&single=true&output=csv';
+    
+    // Using CORS Proxy to bypass browser security restrictions
+    const CSV_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
 
     Papa.parse(CSV_URL, {
       download: true,
@@ -168,7 +148,7 @@
         renderOrgTree(results.data);
       },
       error: function(err) {
-        document.getElementById('loading').innerHTML = '<span style="color: red;">Failed to load data. Please check access permissions.</span>';
+        document.getElementById('loading').innerHTML = '<span style="color: red;">Failed to load data. Ensure sheet is set to "Anyone with link".</span>';
       }
     });
 
@@ -257,7 +237,7 @@
 
       document.getElementById('treeRoot').innerHTML = html;
 
-      // Auto-scroll to center
+      // Auto scroll center
       const viewport = document.getElementById('viewport');
       viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2;
     }
