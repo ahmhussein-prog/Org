@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EGY Noon Minutes Fulfillment - Org Chart</title>
+  <title>EGY Noon Minutes Fulfillment - Dynamic Org Chart</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -43,6 +43,14 @@
     .org-title span { font-size: 10px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
     .org-title h1 { font-size: 16px; font-weight: 800; }
 
+    .header-right { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-sub); }
+    .refresh-btn {
+      background: #f1f5f9; border: 1px solid var(--border-color); padding: 6px 12px;
+      border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--text-main);
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .refresh-btn:hover { background: #e2e8f0; }
+
     .loading-state {
       display: flex; align-items: center; justify-content: center;
       height: 70vh; font-weight: 700; color: var(--text-sub); gap: 10px;
@@ -64,7 +72,7 @@
 
     .node-card {
       background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px;
-      width: 240px; padding: 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      width: 250px; padding: 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
       display: inline-block; text-align: left; transition: all 0.2s ease;
     }
     .node-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.08); }
@@ -80,7 +88,8 @@
     .user-info .user-name { font-size: 12px; font-weight: 700; color: var(--text-main); line-height: 1.2; }
     .user-info .user-title { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
 
-    .stores-pill { background: #eff6ff; color: #1e40af; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; word-break: break-word; }
+    .stores-container { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+    .stores-pill { background: #eff6ff; color: #1e40af; font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 4px; }
 
     .contact-field {
       background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
@@ -111,6 +120,10 @@
         <h1>EGY Noon Minutes Fulfillment</h1>
       </div>
     </div>
+    <div class="header-right">
+      <span id="lastUpdated">Updating...</span>
+      <button class="refresh-btn" onclick="loadData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
   </header>
 
   <div id="loading" class="loading-state">
@@ -133,42 +146,56 @@
   <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzGUp85QYiwxhtiP4IzrUL_FM0JKJ8-NILwA33Jw9fhNmDgcdrPagZpALlN21aLThwv/exec';
 
-    fetch(WEB_APP_URL)
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('viewport').style.display = 'block';
-        
-        // Skip Header Row
-        const rows = data.slice(1);
-        renderOrgTree(rows);
-      })
-      .catch(err => {
-        document.getElementById('loading').innerHTML = '<span style="color: red;">Failed to load data. Ensure App Access is set to "Anyone".</span>';
-      });
+    function loadData() {
+      fetch(WEB_APP_URL)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('viewport').style.display = 'block';
+          
+          // Row 0 is Headers
+          const rows = data.slice(1);
+          renderOrgTree(rows);
+          
+          const now = new Date();
+          document.getElementById('lastUpdated').innerText = 'Last updated: ' + now.toLocaleTimeString();
+        })
+        .catch(err => {
+          document.getElementById('loading').innerHTML = '<span style="color: red;">Failed to load data.</span>';
+        });
+    }
 
     function renderOrgTree(rows) {
       const treeData = {};
 
       rows.forEach(row => {
-        const code = row[2] || '';
-        const mgr = row[7]?.trim() || 'Unassigned Manager';
-        const sup = row[9]?.trim() || 'Unassigned Supervisor';
-        const supEmail = row[10]?.trim() || '';
-        const tlName = row[11]?.trim();
-        const phone = row[12] ? String(row[12]) : '';
-        const tlEmail = row[13]?.trim() || '';
+        // Correct Column Mapping according to Sheet
+        const dsCode = row[2] ? String(row[2]).trim() : '';
+        const mgr = row[6] ? String(row[6]).trim() : 'Unassigned Manager';
+        const sup = row[8] ? String(row[8]).trim() : 'Unassigned Supervisor';
+        const supEmail = row[9] ? String(row[9]).trim() : '';
+        const tlName = row[10] ? String(row[10]).trim() : '';
+        const phone = row[11] ? String(row[11]).trim() : '';
+        const tlEmail = row[12] ? String(row[12]).trim() : '';
+
+        if (!mgr || mgr === '-') return;
 
         if (!treeData[mgr]) treeData[mgr] = {};
-        if (!treeData[mgr][sup]) treeData[mgr][sup] = { email: supEmail, tls: [] };
+        if (!treeData[mgr][sup]) treeData[mgr][sup] = { email: supEmail, tls: {} };
 
-        if (tlName) {
-          treeData[mgr][sup].tls.push({
-            name: tlName,
-            code: code,
-            email: tlEmail,
-            phone: phone
-          });
+        if (tlName && tlName !== '-') {
+          // Group stores by TL Name to prevent duplicate cards
+          if (!treeData[mgr][sup].tls[tlName]) {
+            treeData[mgr][sup].tls[tlName] = {
+              name: tlName,
+              codes: [],
+              email: tlEmail,
+              phone: phone
+            };
+          }
+          if (dsCode && !treeData[mgr][sup].tls[tlName].codes.includes(dsCode)) {
+            treeData[mgr][sup].tls[tlName].codes.push(dsCode);
+          }
         }
       });
 
@@ -203,8 +230,17 @@
             </div>
             <ul>`;
 
-          supObj.tls.forEach(tl => {
+          for (let tlName in supObj.tls) {
+            const tl = supObj.tls[tlName];
             const cleanPhone = tl.phone ? tl.phone.replace(/[^0-9]/g, '') : '';
+            
+            let storesHTML = '';
+            if (tl.codes.length > 0) {
+              storesHTML = '<div class="stores-container">' + 
+                tl.codes.map(c => `<span class="stores-pill">${c}</span>`).join('') + 
+                '</div>';
+            }
+
             html += `<li>
               <div class="node-card">
                 <div class="role-badge role-team-leader">Team Leader</div>
@@ -215,13 +251,13 @@
                     <div class="user-title">Team Leader</div>
                   </div>
                 </div>
-                ${tl.code ? `<div class="stores-pill">${tl.code}</div>` : ''}
+                ${storesHTML}
                 ${tl.email ? `<a href="mailto:${tl.email}" class="contact-field"><i class="fa-regular fa-envelope"></i> ${tl.email}</a>` : ''}
                 ${tl.phone ? `<a href="tel:+${cleanPhone}" class="contact-field"><i class="fa-solid fa-phone"></i> +${tl.phone}</a>` : ''}
                 ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="contact-field whatsapp-btn"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}
               </div>
             </li>`;
-          });
+          }
 
           html += `</ul></li>`;
         }
@@ -231,10 +267,13 @@
       html += '</ul>';
 
       document.getElementById('treeRoot').innerHTML = html;
-
-      const viewport = document.getElementById('viewport');
-      viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2;
     }
+
+    // Initial Load
+    loadData();
+
+    // Auto Refresh Every 30 Seconds
+    setInterval(loadData, 30000);
   </script>
 </body>
 </html>
