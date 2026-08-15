@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EGY Noon Minutes Logistics - Org Chart</title>
+  <style>
+    :root {
+      --noon-yellow: #feee00;
+      --bg-pattern: #f0f3f8;
+      --card-border: #d0d7de;
+      --text-dark: #1f2937;
+      --text-muted: #6b7280;
+      
+      /* Role Colors */
+      --color-director: #eab308;
+      --color-manager: #2563eb;
+      --color-assistant: #0284c7;
+      --color-supervisor: #7c3aed;
+      --color-tl: #16a34a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    
+    body {
+      background-color: var(--bg-pattern);
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 16px 16px;
+      color: var(--text-dark);
+      padding-bottom: 50px;
+    }
+
+    /* Header Bar */
+    header {
+      background: white;
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      background: var(--noon-yellow);
+      font-weight: 900;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .title-area h1 { font-size: 16px; font-weight: 700; }
+    .title-area span { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+    /* Org Tree Structure */
+    .tree-container {
+      overflow-x: auto;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .tree ul {
+      padding-top: 20px;
+      position: relative;
+      transition: all 0.5s;
+      display: flex;
+      justify-content: center;
+    }
+
+    .tree li {
+      float: left;
+      text-align: center;
+      list-style-type: none;
+      position: relative;
+      padding: 20px 10px 0 10px;
+    }
+
+    /* Connecting Lines */
+    .tree li::before, .tree li::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 50%;
+      border-top: 2px solid #cbd5e1;
+      width: 50%;
+      height: 20px;
+    }
+
+    .tree li::after {
+      right: auto;
+      left: 50%;
+      border-left: 2px solid #cbd5e1;
+    }
+
+    .tree li:only-child::after, .tree li:only-child::before { display: none; }
+    .tree li:only-child { padding-top: 0; }
+    .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+    .tree li:last-child::before { border-right: 2px solid #cbd5e1; border-radius: 0 5px 0 0; }
+    .tree li:first-child::after { border-radius: 5px 0 0 0; }
+
+    .tree ul ul::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      border-left: 2px solid #cbd5e1;
+      width: 0;
+      height: 20px;
+    }
+
+    /* Card Styling */
+    .card {
+      background: white;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      width: 250px;
+      padding: 16px;
+      display: inline-block;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      position: relative;
+      text-align: left;
+    }
+
+    .card.top-level {
+      background: #fefce8;
+      border-color: #fde047;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    /* Dynamic Colors by Role */
+    .role-director { color: var(--color-director); }
+    .role-director::before { background: var(--color-director); }
+    
+    .role-manager { color: var(--color-manager); }
+    .role-manager::before { background: var(--color-manager); }
+    
+    .role-assistant { color: var(--color-assistant); }
+    .role-assistant::before { background: var(--color-assistant); }
+    
+    .role-supervisor { color: var(--color-supervisor); }
+    .role-supervisor::before { background: var(--color-supervisor); }
+    
+    .role-tl { color: var(--color-tl); }
+    .role-tl::before { background: var(--color-tl); }
+
+    .name { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+    .title { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+
+    .field-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      margin-bottom: 6px;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stores-tag {
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="logo">noon minutes</div>
+      <div class="title-area">
+        <span>Org Chart</span>
+        <h1>EGY Noon Minutes Logistics</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="tree-container">
+    <div class="tree">
+      <ul>
+        <!-- Associate Director -->
+        <li>
+          <div class="card top-level">
+            <div class="badge role-director">Associate Director</div>
+            <div class="name">Kareem Hesham Abdelbary</div>
+            <div class="title">Associate Director</div>
+            <div class="field-box">✉️ khesham@noon.com</div>
+            <div class="field-box">📞 +20 10 16777692</div>
+          </div>
+          
+          <ul>
+            <!-- Fulfillment Manager -->
+            <li>
+              <div class="card">
+                <div class="badge role-manager">Manager</div>
+                <div class="name">Maged Meselhy</div>
+                <div class="title">Fulfillment Manager</div>
+                <div class="field-box">✉️ mmeselhy@noon.com</div>
+                <div class="field-box">📞 +20 11 11671168</div>
+              </div>
+
+              <ul>
+                <!-- Assistant Manager -->
+                <li>
+                  <div class="card">
+                    <div class="badge role-assistant">Assistant Manager</div>
+                    <div class="name">Ahmed Hatem</div>
+                    <div class="title">Assistant Manager</div>
+                    <div class="field-box">✉️ ahhatem@noon.com</div>
+                    <div class="field-box">📞 N/A</div>
+                  </div>
+
+                  <ul>
+                    <!-- SUPERVISORS LEVEL -->
+                    
+                    <!-- Supervisor 1 -->
+                    <li>
+                      <div class="card">
+                        <div class="badge role-supervisor">Supervisor</div>
+                        <div class="name">Ahmed Ayman</div>
+                        <div class="title">Supervisor</div>
+                        <div class="stores-tag">CAIDS10, CAIDS11, CAIDS19</div>
+                        <div class="field-box">✉️ ahmhussein@noon.com</div>
+                        <div class="field-box">📞 +20 10 17586077</div>
+                      </div>
+                      <ul>
+                        <!-- Team Leaders under Ahmed Ayman -->
+                        <li>
+                          <div class="card">
+                            <div class="badge role-tl">Team Leader</div>
+                            <div class="name">Mahmoud Abdelazem</div>
+                            <div class="title">CAIDS10</div>
+                            <div class="field-box">✉️ mdelnaggar@noon.com</div>
+                            <div class="field-box">📞 +20 10 10260089</div>
+                          </div>
+                        </li>
+                        <li>
+                          <div class="card">
+                            <div class="badge role-tl">Team Leader</div>
+                            <div class="name">Tamer Hanafy</div>
+                            <div class="title">CAIDS11</div>
+                            <div class="field-box">✉️ thanafy@noon.com</div>
+                            <div class="field-box">📞 +20 10 04544027</div>
+                          </div>
+                        </li>
+                      </ul>
+                    </li>
+
+                    <!-- Supervisor 2 -->
+                    <li>
+                      <div class="card">
+                        <div class="badge role-supervisor">Supervisor</div>
+                        <div class="name">Mina Samy</div>
+                        <div class="title">Supervisor</div>
+                        <div class="stores-tag">CAIDS12, 14, 15, 17, 25, ALYDS02, 03</div>
+                        <div class="field-box">✉️ mnashed@noon.com</div>
+                        <div class="field-box">📞 +20 10 11928844</div>
+                      </div>
+                      <ul>
+                        <!-- Team Leader under Mina Samy -->
+                        <li>
+                          <div class="card">
+                            <div class="badge role-tl">Team Leader</div>
+                            <div class="name">Magdy Elkomy</div>
+                            <div class="title">CAIDS12</div>
+                            <div class="field-box">✉️ melkomy@noon.com</div>
+                            <div class="field-box">📞 +20 11 54529283</div>
+                          </div>
+                        </li>
+                      </ul>
+                    </li>
+
+                    <!-- Supervisor 3 -->
+                    <li>
+                      <div class="card">
+                        <div class="badge role-supervisor">Supervisor</div>
+                        <div class="name">Ahmed Mostafa</div>
+                        <div class="title">Supervisor</div>
+                        <div class="stores-tag">CAIDS09, CAIDS23</div>
+                        <div class="field-box">✉️ ahmoustafa@noon.com</div>
+                        <div class="field-box">📞 +20 12 13332098</div>
+                      </div>
+                      <ul>
+                        <!-- Team Leader under Ahmed Mostafa -->
+                        <li>
+                          <div class="card">
+                            <div class="badge role-tl">Team Leader</div>
+                            <div class="name">Tarek Sabry</div>
+                            <div class="title">CAIDS09</div>
+                            <div class="field-box">✉️ tsabry@noon.com</div>
+                            <div class="field-box">📞 +20 10 42449897</div>
+                          </div>
+                        </li>
+                      </ul>
+                    </li>
+
+                    <!-- Supervisor 4 -->
+                    <li>
+                      <div class="card">
+                        <div class="badge role-supervisor">Supervisor</div>
+                        <div class="name">Hisham Heikal</div>
+                        <div class="title">Supervisor</div>
+                        <div class="stores-tag">CAIDS13, CAIDS22, CAIDS24</div>
+                        <div class="field-box">✉️ hheikal@noon.com</div>
+                        <div class="field-box">📞 +20 11 15649560</div>
+                      </div>
+                    </li>
+
+                    <!-- Supervisor 5 -->
+                    <li>
+                      <div class="card">
+                        <div class="badge role-supervisor">Supervisor</div>
+                        <div class="name">Ahmed Saied</div>
+                        <div class="title">Supervisor</div>
+                        <div class="stores-tag">CAIDS16, CAIDS18, CAIDS20, CAIDS21</div>
+                        <div class="field-box">✉️ asaieed@noon.com</div>
+                        <div class="field-box">📞 +20 10 08712481</div>
+                      </div>
+                    </li>
+
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</body>
+</html>
